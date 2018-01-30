@@ -62,7 +62,7 @@ def upload_file():
     #return up to 5 categories
     return f''''
 <div>
-    <h1>{guess}</h1>"
+    <h1>{guess}</h1>
 </div>
 '''
 
