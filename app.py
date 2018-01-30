@@ -1,10 +1,11 @@
 import os
 import time
 import json
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for
 from fastai.conv_learner import *
 
 app = Flask(__name__, static_url_path='/data')
+app._static_folder = 'data'
 print("Starting flask app...")
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -26,6 +27,19 @@ def load_model():
     learn.precompute=False
 
 load_model()
+
+@app.context_processor
+def override_url_for():
+    return dict(url_for=dated_url_for)
+
+def dated_url_for(endpoint, **values):
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     app._static_folder, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
 
 @app.route('/', methods=['GET'])
 def home():
@@ -60,11 +74,12 @@ def upload_file():
     if probs[0][1] > 0.5:
         guess = "Ibu"
     #return up to 5 categories
-    return f''''
+    return '''
 <div>
     <h1>{guess}</h1>
+    <img src="{src}" height="500" >
 </div>
-'''
+'''.format(guess=guess, src=dated_url_for('static', filename='test/placeholder.jpg'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, use_reloader=True)
