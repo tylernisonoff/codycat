@@ -67,19 +67,24 @@ def upload_file():
     end_time = time.process_time()
     print("Elapsed time: %.9f" % (end_time-start_time))
     print(test_preds)
-    probs = np.exp(test_preds)
+    probs = np.exp(test_preds)[0]
     print(probs)
 
     guess = "Gal"
-    if probs[0][1] > 0.5:
+    prob_gal = probs[0]
+    display_prob = prob_gal
+    if prob_gal < 0.5:
         guess = "Ibu"
+        display_prob = 1 - display_prob
     #return up to 5 categories
+
+    display_percent_str = "{0:.3f}".format(display_prob * 100)
     return '''
 <div>
-    <h1>{guess}</h1>
+    <h1>{guess} : {percent}%</h1>
     <img src="{src}" height="500" >
 </div>
-'''.format(guess=guess, src=dated_url_for('static', filename='test/placeholder.jpg'))
+'''.format(guess=guess, src=dated_url_for('static', filename='test/placeholder.jpg'), percent= display_percent_str)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, use_reloader=True)
