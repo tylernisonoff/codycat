@@ -4,7 +4,7 @@ import json
 from flask import Flask, render_template, request
 from fastai.conv_learner import *
 
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__, static_url_path='/data')
 print("Starting flask app...")
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -14,7 +14,7 @@ sz = 224
 
 def get_data(sz):
     tfms = tfms_from_model(resnet34, sz, aug_tfms=transforms_side_on, max_zoom=1.1)
-    data = ImageClassifierData.from_paths(PATH, tfms=tfms)
+    data = ImageClassifierData.from_paths(PATH, tfms=tfms, test_name='test')
     return data
 
 data = get_data(sz)
@@ -29,7 +29,13 @@ load_model()
 
 @app.route('/', methods=['GET'])
 def home():
-    return 'HOME'
+    return '''
+<h1> HOME <h1>
+<form action='/upload' method=post enctype=multipart/form-data>
+    <p><input type=file name=file>
+    <input type=submit value=Upload>
+</form>
+'''
 @app.route('/upload', methods=['POST'])
 def upload_file():
     print("cleaning test dir")
@@ -46,13 +52,19 @@ def upload_file():
     test_preds = learn.predict(is_test=True)
     end_time = time.process_time()
     print("Elapsed time: %.9f" % (end_time-start_time))
-    tuples = list(zip(data.classes, test_preds[0]))
-    #convert to a float
-    tuples = list(map(lambda x: (x[0], float(x[1])), tuples))
-    #throw away anything less than 0.1
-    result = [item for item in tuples if item[1] > 0.1]
+    print(test_preds)
+    probs = np.exp(test_preds)
+    print(probs)
+
+    guess = "Gal"
+    if probs[0][1] > 0.5:
+        guess = "Ibu"
     #return up to 5 categories
-    return json.dumps(dict(result[:5]))
+    return f''''
+<div>
+    <h1>{guess}</h1>"
+</div>
+'''
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True)
