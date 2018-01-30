@@ -44,7 +44,7 @@ def dated_url_for(endpoint, **values):
 @app.route('/', methods=['GET'])
 def home():
     return '''
-<h1>Upload a jpg file of Gal or Ibu.  I'll tell you who I think it is!<h1>
+<h1>Upload a jpg or png file of Gal or Ibu.  I'll tell you who I think it is!<h1>
 <form action='/upload' method=post enctype=multipart/form-data>
     <p><input type=file name=file>
     <input type=submit value=Upload>
